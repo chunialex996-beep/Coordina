@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordina - Seguimiento de Proyectos Académicos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- Encabezado principal -->
+  <header class="encabezado">
+    <div class="contenedor encabezado-contenido">
+      <div class="encabezado-info">
+        <div class="marca-bloque">
+          <span class="nombre-herramienta">Coordina</span>
+          <span class="aviso-prototipo" role="note">Prototipo de demostración, datos guardados en este navegador</span>
+        </div>
+        <h1 class="nombre-proyecto">Proyecto de ejemplo: Sistema de Gestión Escolar</h1>
+        <p class="fecha-proyecto">
+          <strong>Fecha de entrega del proyecto:</strong> 20 de noviembre de 2026
+        </p>
+      </div>
+      <div class="encabezado-acciones">
+        <button type="button" id="btn-agregar-tarea" class="boton boton-primario">
+          + Agregar tarea
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="contenedor contenido-principal">
+    <!-- Aviso de estado / retroalimentación breve -->
+    <div id="mensaje-retroalimentacion" class="mensaje-toast oculto" role="status" aria-live="polite"></div>
+
+    <!-- Sección de contadores -->
+    <section class="seccion-contadores" aria-label="Resumen de estados de las tareas">
+      <article class="tarjeta-contador contador-pendiente">
+        <span class="contador-etiqueta">Pendientes</span>
+        <strong id="contador-pendientes" class="contador-numero">0</strong>
+      </article>
+      <article class="tarjeta-contador contador-en-curso">
+        <span class="contador-etiqueta">En curso</span>
+        <strong id="contador-en-curso" class="contador-numero">0</strong>
+      </article>
+      <article class="tarjeta-contador contador-terminada">
+        <span class="contador-etiqueta">Terminadas</span>
+        <strong id="contador-terminadas" class="contador-numero">0</strong>
+      </article>
+    </section>
+
+    <!-- Sección de lista de tareas -->
+    <section class="tarjeta-principal" aria-labelledby="titulo-lista-tareas">
+      <div class="tarjeta-encabezado">
+        <h2 id="titulo-lista-tareas" class="titulo-seccion">Tareas del proyecto</h2>
+        <button type="button" id="btn-vaciar-tareas" class="boton boton-texto"
+          title="Eliminar todas las tareas actuales">
+          Vaciar lista
+        </button>
+      </div>
+
+      <!-- Contenedor cuando sí hay tareas -->
+      <div id="contenedor-tabla" class="contenedor-tabla">
+        <table class="tabla-tareas">
+          <thead>
+            <tr>
+              <th scope="col">Nombre de la tarea</th>
+              <th scope="col">Responsable</th>
+              <th scope="col">Fecha de entrega</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="columna-accion">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-tabla-tareas">
+            <!-- Las filas se generan dinámicamente desde script.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Estado vacío cuando no hay tareas -->
+      <div id="estado-vacio" class="estado-vacio oculto">
+        <p class="estado-vacio-titulo">No hay tareas registradas en este momento.</p>
+        <p class="estado-vacio-descripcion">
+          Comienza organizando el trabajo del equipo registrando las actividades, su responsable, fecha de entrega y el
+          enlace a su evidencia.
+        </p>
+        <div class="estado-vacio-acciones">
+          <button type="button" id="btn-crear-primera-tarea" class="boton boton-primario">
+            Crear la primera tarea
+          </button>
+          <button type="button" id="btn-restaurar-ejemplos" class="boton boton-secundario">
+            Cargar tareas de ejemplo
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal para crear, consultar detalle y editar tarea -->
+  <div id="modal-fondo" class="modal-fondo oculto" aria-hidden="true">
+    <div class="modal-contenedor" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <div class="modal-encabezado">
+        <h2 id="modal-titulo" class="modal-titulo">Agregar tarea</h2>
+        <button type="button" id="btn-cerrar-modal" class="boton-cerrar" aria-label="Cerrar ventana">
+          &times;
+        </button>
+      </div>
+
+      <form id="formulario-tarea" class="formulario-tarea" novalidate>
+        <!-- Identificador oculto para saber si estamos creando o editando -->
+        <input type="hidden" id="tarea-id" value="">
+
+        <!-- Bloque de estado de la evidencia actual (visible al consultar detalle) -->
+        <div id="bloque-consulta-evidencia" class="bloque-evidencia oculto">
+          <span class="bloque-evidencia-titulo">Evidencia registrada actualmente:</span>
+          <div id="contenido-evidencia-actual" class="contenido-evidencia-actual">
+            <!-- Se actualiza dinámicamente: botón "Abrir evidencia" o "Sin evidencia registrada" -->
+          </div>
+        </div>
+
+        <!-- Campo: Nombre de la tarea -->
+        <div class="campo-formulario">
+          <label for="campo-nombre">Nombre de la tarea <span class="obligatorio">*</span></label>
+          <input type="text" id="campo-nombre" name="nombre" placeholder="Ej. Redactar marco teórico (Ejemplo)" required
+            autocomplete="off">
+          <p id="error-nombre" class="mensaje-error oculto" role="alert"></p>
+        </div>
+
+        <!-- Campo: Descripción -->
+        <div class="campo-formulario">
+          <label for="campo-descripcion">Descripción (opcional)</label>
+          <textarea id="campo-descripcion" name="descripcion" rows="3"
+            placeholder="Agrega acuerdos, puntos a revisar o detalles de la entrega..."></textarea>
+        </div>
+
+        <!-- Fila doble en escritorio: Responsable y Fecha de entrega -->
+        <div class="fila-campos">
+          <!-- Campo: Responsable -->
+          <div class="campo-formulario">
+            <label for="campo-responsable">Responsable <span class="obligatorio">*</span></label>
+            <select id="campo-responsable" name="responsable" required>
+              <option value="">Selecciona a un integrante...</option>
+              <option value="Alex">Alex</option>
+              <option value="Marcos">Marcos</option>
+              <option value="Emily">Emily</option>
+            </select>
+            <p id="error-responsable" class="mensaje-error oculto" role="alert"></p>
+          </div>
+
+          <!-- Campo: Fecha de entrega -->
+          <div class="campo-formulario">
+            <label for="campo-fecha">Fecha de entrega <span class="obligatorio">*</span></label>
+            <input type="date" id="campo-fecha" name="fecha" required>
+            <p id="error-fecha" class="mensaje-error oculto" role="alert"></p>
+          </div>
+        </div>
+
+        <!-- Campo: Estado -->
+        <div class="campo-formulario">
+          <label for="campo-estado">Estado <span class="obligatorio">*</span></label>
+          <select id="campo-estado" name="estado" required>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En curso">En curso</option>
+            <option value="Terminada">Terminada</option>
+          </select>
+          <p id="error-estado" class="mensaje-error oculto" role="alert"></p>
+        </div>
+
+        <!-- Campo: Enlace a evidencia -->
+        <div class="campo-formulario">
+          <label for="campo-evidencia">Enlace a evidencia (opcional)</label>
+          <input type="url" id="campo-evidencia" name="evidencia" placeholder="https://drive.google.com/..."
+            autocomplete="off">
+          <span class="ayuda-campo">Ingresa una dirección web válida que comience con http:// o https://</span>
+          <p id="error-evidencia" class="mensaje-error oculto" role="alert"></p>
+        </div>
+
+        <!-- Botones de acción del formulario -->
+        <div class="modal-acciones">
+          <button type="button" id="btn-eliminar-tarea" class="boton boton-peligro oculto">
+            Eliminar tarea
+          </button>
+          <div class="acciones-derecha">
+            <button type="button" id="btn-cancelar" class="boton boton-secundario">
+              Cancelar
+            </button>
+            <button type="submit" id="btn-guardar" class="boton boton-primario">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
